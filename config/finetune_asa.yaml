@@ -7,8 +7,7 @@ common:
   tensorboard_logdir: tb_asa_finetune
 
 checkpoint:
-  save_interval: 1
-  save_interval_updates: 10000
+  save_interval_updates: 2500
   keep_interval_updates: 1
   no_epoch_checkpoints: true
   load_checkpoint_on_all_dp_ranks: true
@@ -21,15 +20,15 @@ task:
   normalize: true
 
 dataset:
-  num_workers: 6
-  max_tokens: 3600000
+  num_workers: 4
+  max_tokens: 900000
   skip_invalid_size_inputs_valid_test: true
   validate_interval: 1
   required_batch_size_multiple: 1
   disable_validation: true
 
 distributed_training:
-  distributed_world_size: 16
+  distributed_world_size: 1
   ddp_backend: legacy_ddp
 
 criterion:
@@ -45,8 +44,9 @@ criterion:
     - asa_Sigma_prime_sigma
 
 optimization:
-  max_update: 100000
+  update_freq: [4]
   lr: [0.00005]
+  max_update: 25000
 
 optimizer:
   _name: adam
@@ -56,7 +56,7 @@ optimizer:
 
 lr_scheduler:
   _name: tri_stage
-  phase_ratio: [0.10, 0.40, 0.50]
+  phase_ratio: [0.1, 0.4, 0.5]
 
 model:
   _name: dinosr
@@ -78,7 +78,7 @@ model:
   codebook_init_decay: 0.9
   instance_norm_target_layer: true
 
-  mask_prob: 0.8
+  mask_prob: 0.65
   mask_length: 10
 
   pos_conv_depth: 5
@@ -86,7 +86,7 @@ model:
 
   ema_decay: 0.9995
   ema_end_decay: 0.9999
-  ema_anneal_end_step: 30000
+  ema_anneal_end_step: 10000
 
   ema_transformer_only: true
   ema_layers_only: true
