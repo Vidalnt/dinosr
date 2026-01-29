@@ -72,10 +72,11 @@ class SAVC_ASA(nn.Module):
 
     def forward(self, x):
         """
-        Input x: (B, C, T) - CNN Feature Extractor output
+        Input x: (B, C, T)
+        Returns: (x_perturbed, stats_dict)
         """
         if not self.training:
-            return x
+            return x, {}
 
         B, C, T = x.size()
 
@@ -124,7 +125,14 @@ class SAVC_ASA(nn.Module):
         # 7. Style transformation (s')
         x_perturbed = x_norm * sigma_t + mu_t
 
-        return x_perturbed
+        stats = {
+            "asa_I_mu": I_mu.mean(),
+            "asa_I_sigma": I_sigma.mean(),
+            "asa_Sigma_prime_mu": Sigma_prime_mu.mean(),
+            "asa_Sigma_prime_sigma": Sigma_prime_sigma.mean(),
+        }
+
+        return x_perturbed, stats
 
 
 # ==============================================================================
@@ -585,11 +593,13 @@ class DinosrModel(BaseFairseqModel):
         # Save clean features before ASA for stable teacher targets.
         clean_features_for_teacher = features
 
+        asa_stats = {}
+
         # --- SAVC ADVERSARIAL STYLE AUGMENTATION (ASA) ---
         # Apply perturbation ONLY to student during training.
         # Goal: encoder learns to map augmented features to clean targets.
         if self.enable_asa and self.training:
-            features = self.asa_module(features)
+            features, asa_stats = self.asa_module(features)
 
         features = features.transpose(1, 2)
         features = self.layer_norm(features)
@@ -844,6 +854,10 @@ class DinosrModel(BaseFairseqModel):
                     raise Exception(
                         f"pred var is {result['pred_var'].item()} < {self.cfg.min_pred_var}, exiting"
                     )
+
+            if self.enable_asa and len(asa_stats) > 0:
+                for k, v in asa_stats.items():
+                    result[k] = v.item() if torch.is_tensor(v) else v
 
         if self.ema is not None:
             result["ema_decay"] = self.ema.get_decay() * 1000
