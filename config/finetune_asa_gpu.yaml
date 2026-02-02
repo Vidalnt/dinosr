@@ -3,7 +3,7 @@
 common:
   fp16: true
   log_format: json
-  log_interval: 50
+  log_interval: 100
   tensorboard_logdir: tb_asa_finetune
 
 checkpoint:
@@ -21,15 +21,18 @@ task:
 
 dataset:
   num_workers: 4
-  max_tokens: 850000
+  max_tokens: 1400000
   skip_invalid_size_inputs_valid_test: true
-  validate_interval: 1
+  validate_interval: 5
   required_batch_size_multiple: 1
   disable_validation: true
 
 distributed_training:
   distributed_world_size: 2
-  distributed_backend: "nccl"
+  distributed_backend: nccl
+  ddp_backend: pytorch_ddp
+  distributed_port: 29500
+  find_unused_parameters: false
 
 criterion:
   _name: model
@@ -44,9 +47,9 @@ criterion:
     - asa_Sigma_prime_sigma
 
 optimization:
-  update_freq: [3]
-  lr: [0.00005]
   max_update: 25000
+  lr: [0.00005]
+  update_freq: [4]
 
 optimizer:
   _name: adam
@@ -60,12 +63,11 @@ lr_scheduler:
 
 model:
   _name: dinosr
-  enable_asa: true
   extractor_mode: layer_norm
   encoder_layerdrop: 0.05
   dropout_input: 0.0
   dropout_features: 0.0
-  feature_grad_mult: 1.0
+  feature_grad_mult: 0.1
   encoder_embed_dim: 768
   discrete: true
   codebook_size: 256
@@ -73,14 +75,15 @@ model:
   normal_init_codebook: false
   codebook_init_decay: 0.9
   instance_norm_target_layer: true
-  mask_prob: 0.65
+  mask_prob: 0.8
   mask_length: 10
   pos_conv_depth: 5
   conv_pos: 95
-  ema_decay: 0.9995
+  ema_decay: 0.999
   ema_end_decay: 0.9999
-  ema_anneal_end_step: 10000
+  ema_anneal_end_step: 15000
   ema_transformer_only: true
   ema_layers_only: true
   require_same_masks: true
   mask_dropout: 0
+  enable_asa: true

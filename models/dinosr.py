@@ -436,7 +436,9 @@ class DinosrModel(BaseFairseqModel):
         if self.shared_module_state_dict is not None:
             self.freeze_shared_modules()
 
-        state = super().state_dict(destination, prefix, keep_vars)
+        state = super().state_dict(
+            destination=destination, prefix=prefix, keep_vars=keep_vars
+        )
 
         if self.ema is not None:
             state[prefix + "_ema"] = self.ema.fp32_params
