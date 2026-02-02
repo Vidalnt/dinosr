@@ -35,7 +35,7 @@ distributed_training:
   distributed_backend: nccl
   ddp_backend: pytorch_ddp
   distributed_port: 29500
-  find_unused_parameters: false
+  find_unused_parameters: true
 
 criterion:
   _name: model
