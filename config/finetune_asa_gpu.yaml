@@ -9,6 +9,9 @@ common:
 checkpoint:
   save_interval_updates: 2500
   keep_interval_updates: 1
+  keep_best_checkpoints: 1
+  best_checkpoint_metric: loss
+  maximize_best_checkpoint_metric: false
   no_epoch_checkpoints: true
   load_checkpoint_on_all_dp_ranks: true
 
