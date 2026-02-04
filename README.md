@@ -1,20 +1,23 @@
 
 # [DinoSR: Self-Distillation and Online Clustering for Self-supervised Speech Representation Learning](https://arxiv.org/pdf/2305.10005.pdf)
 
+We have integrated the **Adversarial Style Augmentation (ASA)** module from the **[SAVC](https://arxiv.org/abs/2405.00603)** framework into DinoSR. 
+
+**Why?** 
+Similar to **ContentVec**, the goal is to disentangle speaker identity from linguistic content. However, instead of using an external Voice Conversion system to preprocess the dataset, we use ASA to apply dynamic statistical perturbations to the feature space during training. This forces the model to ignore speaker style (timbre/channel) and focus purely on phonetic content, achieving robust speaker disentanglement in an end-to-end manner.
 
 ### Setup
 
 - Codebase preparation (based on [`fairseq`](https://github.com/facebookresearch/fairseq))
 ```
 # we use fairseq to build the model
-git clone https://github.com/facebookresearch/fairseq
+git clone https://github.com/One-sixth/fairseq
 cd fairseq
-git checkout 47e279842ac8776e3964b0e45c320ad1d2ea6096  # we recommend using the commit DinoSR was developed on
 pip install --editable ./
 
 # plug in DinoSR
 cd examples
-git clone https://github.com/Alexander-H-Liu/dinosr.git
+git clone https://github.com/Vidalnt/dinosr.git
 ```
 
 - Data preparation:
@@ -61,6 +64,20 @@ python fairseq_cli/hydra_train.py -m \
         task.normalize=True
 ```
 
+- Fine-tuning with Adversarial Style Augmentation (ASA)
+
+```
+python fairseq_cli/hydra_train.py -m \
+  --config-dir examples/dinosr/config/ \
+  --config-name finetune_asa \
+  +task.data=/path/to/dataset/manifests \
+  +common.user_dir=examples/dinosr \
+  ++checkpoint.restore_file=/path/to/dinosr_base.ckpt \
+  ++checkpoint.reset_optimizer=true \
+  ++checkpoint.reset_lr_scheduler=true
+```
 ### Pre-trained checkpoint
 
 Pre-trained checkpoint without fine-tuning can be downloaded [here](https://data.csail.mit.edu/placesaudio/dinosr/dinosr.ckpt).
+
+A model fine-tuned using the ASA module for enhanced speaker disentanglement is available [here](https://huggingface.co/vidalnt/DinoSR-Savc/tree/main).
